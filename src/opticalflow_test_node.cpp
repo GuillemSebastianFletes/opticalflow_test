@@ -1,21 +1,6 @@
-#include <ros/ros.h>
-#include <sensor_msgs/image_encodings.h>
-#include <geometry_msgs/Point.h>
-#include <image_transport/image_transport.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <cv_bridge/cv_bridge.h>
-#include <iostream>
-#include <cmath>
-#include <math.h>
-#include "opencv2/video/tracking.hpp"
-//#include <message_filters/subscriber.h>
-//#include <message_filters/time_synchronizer.h>
+#include <trajectory_mono.hpp>
 
-using namespace cv;
-using namespace std;
-using namespace sensor_msgs;
-using namespace std_msgs;
+
 
 
 Mat original_image;

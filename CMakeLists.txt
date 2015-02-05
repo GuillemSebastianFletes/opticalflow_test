@@ -15,15 +15,14 @@ find_package( OpenCV REQUIRED )
 
 catkin_package()
 
-# include_directories(include)
+include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(opticalflow_test
-#   src/${PROJECT_NAME}/opticalflow_test.cpp
+add_library(trajectory_mono  src/trajectory_mono.cpp)
 # )
 
 ## Declare a cpp executable
@@ -35,6 +34,7 @@ add_executable(opticalflow_test_node src/opticalflow_test_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(opticalflow_test_node
+  opticalflow_test
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
 )
