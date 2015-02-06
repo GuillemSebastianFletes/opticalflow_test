@@ -34,7 +34,7 @@ add_executable(opticalflow_test_node src/opticalflow_test_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(opticalflow_test_node
-  opticalflow_test
+  trajectory_mono
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
 )

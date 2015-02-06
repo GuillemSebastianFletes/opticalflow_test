@@ -9,32 +9,34 @@
 #include <cmath>
 #include <math.h>
 #include "opencv2/video/tracking.hpp"
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
-
+//#include <message_filters/subscriber.h>
+//#include <message_filters/time_synchronizer.h>
 
 using namespace cv;
 using namespace std;
 using namespace sensor_msgs;
 using namespace std_msgs;
 
-
 class trajectory_mono
 {
     //methods before args.
 private:
-    //will subscribe to both images and sincronize them
+    void originalCallback(const ImageConstPtr& disp);
+    void maskCallback(const ImageConstPtr& disp1);
+
+    Mat original_image_;
+    Mat image_mask_;
+
 
 public:
 
-    trajectory_mono(ros::NodeHandle &nh,std::string &topic1, std::string &topic2);
-
+    trajectory_mono(ros::NodeHandle& nh);
     ~trajectory_mono();
     void show();
     void init();
 
     ros::NodeHandle nodehandle_;
-
-
-
+    image_transport::ImageTransport it_;
+    image_transport::Subscriber original_image__subscriber_;
+    image_transport::Subscriber image_mask_subscriber_;
 };

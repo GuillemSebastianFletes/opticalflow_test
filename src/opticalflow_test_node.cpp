@@ -1,8 +1,19 @@
 #include <trajectory_mono.hpp>
 
 
+int main(int argc, char** argv)
+{
+    ros::init(argc, argv, "optical flow");
+    ros::NodeHandle nh;
+    trajectory_mono trajectory_mono_calculus(nh);
+    trajectory_mono_calculus.init();
+    trajectory_mono_calculus.show();
+    ros::spin();
+    return 0;
+}
 
 
+/*
 Mat original_image;
 Mat mascara_image;
 
@@ -80,3 +91,4 @@ int main(int argc, char **argv)
 //  cv::destroyWindow("mask");
   //cv::destroyWindow("with_mask");
 }
+*/
