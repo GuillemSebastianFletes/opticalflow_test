@@ -37,5 +37,6 @@ target_link_libraries(opticalflow_test_node
   trajectory_mono
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
+  ${BOOST_LIBRARIES}
 )
 

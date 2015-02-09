@@ -1,17 +1,23 @@
-#include <ros/ros.h>
-#include <sensor_msgs/image_encodings.h>
-#include <geometry_msgs/Point.h>
-#include <image_transport/image_transport.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <cv_bridge/cv_bridge.h>
 #include <iostream>
 #include <cmath>
 #include <math.h>
+#include <sstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ros/ros.h>
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/image_encodings.h>
+#include <geometry_msgs/Point.h>
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 #include "opencv2/video/tracking.hpp"
+#include <cv_bridge/cv_bridge.h>
+#include <image_transport/image_transport.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include <sensor_msgs/Image.h>
+
+
 
 using namespace cv;
 using namespace std;
@@ -31,7 +37,7 @@ public:
     void callback(const ImageConstPtr &original, const ImageConstPtr &mask);
 
     ros::NodeHandle nodehandle_;
-    std::string original_image_name_;
-    std::string image_mask_name_;
+    bool first_execution_;
+
 
 };
