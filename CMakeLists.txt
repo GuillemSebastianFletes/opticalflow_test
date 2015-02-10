@@ -24,7 +24,11 @@ include_directories(
 ## Declare a cpp library
 add_library(trajectory_mono  src/trajectory_mono.cpp)
 # )
-
+target_link_libraries(trajectory_mono
+  ${catkin_LIBRARIES}
+  ${OpenCV_LIBRARIES}
+  ${BOOST_LIBRARIES}
+)
 ## Declare a cpp executable
 add_executable(opticalflow_test_node src/opticalflow_test_node.cpp)
 

@@ -33,7 +33,7 @@ public:
 
     trajectory_mono(ros::NodeHandle &nh);
     ~trajectory_mono();
-    void show();
+    //void show();
     void init();
     void callback(const ImageConstPtr &original, const ImageConstPtr &mask);
 

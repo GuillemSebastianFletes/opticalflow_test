@@ -27,7 +27,7 @@ trajectory_mono::trajectory_mono(ros::NodeHandle &nh)
     sync.registerCallback(boost::bind((&trajectory_mono::callback),this, _1, _2));
 
 
-    //Windows initialitation to test
+    //Windows initialitation to test (mover)
     cv::namedWindow("without_mask", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("mask", CV_WINDOW_AUTOSIZE);
     cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
