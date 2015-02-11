@@ -4,10 +4,13 @@ using namespace cv;
 using namespace std;
 using namespace sensor_msgs;
 using namespace std_msgs;
+using namespace message_filters;
+
 
 // Constructor
 trajectory_mono::trajectory_mono(ros::NodeHandle &nh)
 {
+    cout<<"the class have been initializated"<<endl;
     //rosparam variables initialization
     std::string original_image_name_;
     std::string image_mask_name_;
@@ -19,19 +22,24 @@ trajectory_mono::trajectory_mono(ros::NodeHandle &nh)
     nodehandle_ = nh;
     nodehandle_.getParam("/original_image_name",original_image_name_);
     nodehandle_.getParam("/image_mask_name",image_mask_name_);
+    cout<<original_image_name_.data()<<endl;
+    cout<<image_mask_name_.data()<<endl;
+
 
     //sincronizer initialization
-    message_filters::Subscriber<Image> original_sub(nodehandle_, original_image_name_.data(), 1);
-    message_filters::Subscriber<Image> mask_sub(nodehandle_, image_mask_name_.data(), 1);
-    message_filters::TimeSynchronizer<Image, Image> sync(original_sub, mask_sub,1);
-    sync.registerCallback(boost::bind((&trajectory_mono::callback),this, _1, _2));
-
-
-    //Windows initialitation to test (mover)
-    cv::namedWindow("without_mask", CV_WINDOW_AUTOSIZE);
-    cv::namedWindow("mask", CV_WINDOW_AUTOSIZE);
-    cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
-
+    message_filters::Subscriber<Image> original_sub(nodehandle_, original_image_name_.data(), 10);
+    message_filters::Subscriber<Image> mask_sub(nodehandle_, image_mask_name_.data(), 10);
+    typedef message_filters::sync_policies::ApproximateTime<Image, Image> MySyncPolicy;
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(10),original_sub, mask_sub);
+    try
+    {
+    sync.registerCallback(boost::bind(&trajectory_mono::callback, this, _1, _2));
+    cout<<"hola"<<endl;
+    }
+    catch(cv_bridge::Exception& e)
+    {
+        ROS_ERROR("v a ir tu puta madre");
+    }
 }
 
 // Destructor
@@ -42,6 +50,7 @@ void trajectory_mono::init(){}
 
 void trajectory_mono::callback(const ImageConstPtr &original, const ImageConstPtr &mask)
 {
+    cout<<"I get into the callback"<<endl;
     //Opencv variables initialization
     Mat final_image_;
 
@@ -89,16 +98,18 @@ void trajectory_mono::callback(const ImageConstPtr &original, const ImageConstPt
     cv::imshow("mask",image_mask_);
     waitKey(300);
 
-
+    cout<<"I have the images"<<endl;
     ///aply the mask to the image
     //to avoid errors with the mask aplication we have to initialize the final image before its use
     final_image_= Mat::zeros(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
     final_image_.copyTo(original_image_,image_mask_);
 
     ///Testing if the Mask works
+    cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
     cv::imshow("final_image",final_image_);
     waitKey(300);
 
+    /*cout<<"I am going to calculus the optical flow"<<endl;
     ///optical flow calculous
     //first the features detection
     goodFeaturesToTrack( final_image_, NewFeatures, maxCorners, qualityLevel, minDistance, Mat(),
@@ -106,7 +117,7 @@ void trajectory_mono::callback(const ImageConstPtr &original, const ImageConstPt
 
     /*features detected test*/
     /// Draw corners detected
-      cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
+    /*   cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
       int r = 4;
       RNG rng(12345);
       Mat copy;
@@ -121,15 +132,7 @@ void trajectory_mono::callback(const ImageConstPtr &original, const ImageConstPt
 
       /*condition to see if is the first atemp, because to calculate the optical flow
        * the old and the new features are needed*/
-      if (first_execution_)
-      {
-          OldFeatures=NewFeatures;
-      }
 
-     /* else
-      {
-
-      }*/
 }
 
 
