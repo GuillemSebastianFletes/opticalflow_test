@@ -27,18 +27,18 @@ trajectory_mono::trajectory_mono(ros::NodeHandle &nh)
 
 
     //sincronizer initialization
-    message_filters::Subscriber<Image> original_sub(nodehandle_, original_image_name_.data(), 10);
-    message_filters::Subscriber<Image> mask_sub(nodehandle_, image_mask_name_.data(), 10);
+    message_filters::Subscriber<Image> original_sub(nodehandle_, original_image_name_.c_str(), 100);
+    message_filters::Subscriber<Image> mask_sub(nodehandle_, image_mask_name_.c_str(), 100);
     typedef message_filters::sync_policies::ApproximateTime<Image, Image> MySyncPolicy;
     Synchronizer<MySyncPolicy> sync(MySyncPolicy(10),original_sub, mask_sub);
     try
     {
     sync.registerCallback(boost::bind(&trajectory_mono::callback, this, _1, _2));
-    cout<<"hola"<<endl;
+    cout<<"ja va osties"<<endl;
     }
     catch(cv_bridge::Exception& e)
     {
-        ROS_ERROR("v a ir tu puta madre");
+        ROS_ERROR("va a ir tu puta madre");
     }
 }
 
