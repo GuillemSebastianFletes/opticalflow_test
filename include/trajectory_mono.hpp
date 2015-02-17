@@ -32,14 +32,15 @@ class trajectory_mono
     //methods before args.
 public:
 
-    trajectory_mono(ros::NodeHandle &nh);
+    trajectory_mono(Mat &final_image);
     ~trajectory_mono();
     //void show();
     void init();
-    void callback(const ImageConstPtr &original, const ImageConstPtr &mask);
+    void calculus();
 
-    ros::NodeHandle nodehandle_;
+
     bool first_execution_;
+    Mat final_image_;
 
 
 };
