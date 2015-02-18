@@ -12,7 +12,7 @@ void callback(const ImageConstPtr &original, const ImageConstPtr &mask)
 {
     //cout<<"I get into the callback"<<endl;
     //Opencv variables initialization
-    Mat final_image;
+    //Mat final_image;
 
     cv_bridge::CvImagePtr cv_disp_ptr;
     try
@@ -45,19 +45,20 @@ void callback(const ImageConstPtr &original, const ImageConstPtr &mask)
     cv::imshow("mask",image_mask_);
     waitKey(300);*/
 
-   // cout<<"I have the images"<<endl;
+    // cout<<"I have the images"<<endl;
     ///aply the mask to the image
     //to avoid errors with the mask aplication we have to initialize the final image before its use
-    final_image= Mat::zeros(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
+    Mat final_image(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
     final_image.copyTo(original_image_,image_mask_);
+    //waitKey(10);
 
     ///Testing if the Mask works
     cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
     cv::imshow("final_image",final_image);
     waitKey(300);
 
-    /*trajectory_mono trajectory_mono_calculus(final_image);
-    trajectory_mono_calculus.calculus();*/
+    //trajectory_mono trajectory_mono_calculus(final_image);
+    //trajectory_mono_calculus.calculus();
 }
 
 
@@ -71,13 +72,12 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     nh.getParam("/original_image_name",original_image_name_);
     nh.getParam("/image_mask_name",image_mask_name_);
-    cout<<original_image_name_.data()<<endl;
-    cout<<image_mask_name_.data()<<endl;
-
+    //cout<<original_image_name_.data()<<endl;
+    //cout<<image_mask_name_.data()<<endl;
 
     //sincronizer initialization
-    message_filters::Subscriber<Image> original_sub(nh, original_image_name_.c_str(), 100);
-    message_filters::Subscriber<Image> mask_sub(nh, image_mask_name_.c_str(), 100);
+    message_filters::Subscriber<Image> original_sub(nh, original_image_name_.c_str(), 10);
+    message_filters::Subscriber<Image> mask_sub(nh, image_mask_name_.c_str(), 10);
     TimeSynchronizer<Image, Image> sync(original_sub, mask_sub, 10);
     sync.registerCallback(boost::bind(&callback, _1, _2));
     ros::spin();

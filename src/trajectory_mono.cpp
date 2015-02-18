@@ -25,7 +25,8 @@ void trajectory_mono::init(){}
 
 void trajectory_mono::calculus()
 {
-
+    cout<<"hi"<<endl;
+/*
     //good features to track variables
     vector<Point2f> NewFeatures;
     int maxCorners = 500;
@@ -45,7 +46,7 @@ void trajectory_mono::calculus()
                          blockSize, useHarrisDetector, k );
 
     /*features detected test*/
-    /// Draw corners detected
+   /* /// Draw corners detected
       cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
       int r = 4;
       RNG rng(12345);
