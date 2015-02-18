@@ -7,6 +7,8 @@ using namespace sensor_msgs;
 using namespace std_msgs;
 
 
+trajectory_mono trajectory_mono_calculus;
+
 
 void callback(const ImageConstPtr &original, const ImageConstPtr &mask)
 {
@@ -49,16 +51,16 @@ void callback(const ImageConstPtr &original, const ImageConstPtr &mask)
     ///aply the mask to the image
     //to avoid errors with the mask aplication we have to initialize the final image before its use
     Mat final_image(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
-    final_image.copyTo(original_image_,image_mask_);
+    final_image.zeros(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
+    original_image_.copyTo(final_image, image_mask_);
     //waitKey(10);
 
-    ///Testing if the Mask works
+/*    ///Testing if the Mask works
     cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
     cv::imshow("final_image",final_image);
-    waitKey(300);
+    waitKey(300);*/
 
-    //trajectory_mono trajectory_mono_calculus(final_image);
-    //trajectory_mono_calculus.calculus();
+    trajectory_mono_calculus.calculus(final_image);
 }
 
 
@@ -74,6 +76,7 @@ int main(int argc, char** argv)
     nh.getParam("/image_mask_name",image_mask_name_);
     //cout<<original_image_name_.data()<<endl;
     //cout<<image_mask_name_.data()<<endl;
+
 
     //sincronizer initialization
     message_filters::Subscriber<Image> original_sub(nh, original_image_name_.c_str(), 10);

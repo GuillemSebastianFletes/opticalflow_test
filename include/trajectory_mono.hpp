@@ -16,7 +16,7 @@
 #include <image_transport/image_transport.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
+//#include <message_filters/sync_policies/approximate_time.h>
 
 
 
@@ -32,11 +32,11 @@ class trajectory_mono
     //methods before args.
 public:
 
-    trajectory_mono(Mat &final_image);
+    trajectory_mono();
     ~trajectory_mono();
     //void show();
     void init();
-    void calculus();
+    void calculus( Mat &final_image);
 
 
     bool first_execution_;
