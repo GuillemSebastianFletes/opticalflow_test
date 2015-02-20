@@ -41,6 +41,8 @@ public:
 
     bool first_execution_;
     Mat final_image_;
+    Mat prev_image_;
+
 
 
 };
