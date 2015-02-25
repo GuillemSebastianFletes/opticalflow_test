@@ -16,7 +16,10 @@
 #include <image_transport/image_transport.h>
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-//#include <message_filters/sync_policies/approximate_time.h>
+#include <cmath>
+#include <math.h>
+#include <std_msgs/Float64.h>
+
 
 
 
@@ -30,6 +33,12 @@ using namespace std_msgs;
 class trajectory_mono
 {
     //methods before args.
+private:
+    bool first_execution_;
+    Mat final_image_;
+    Mat prev_image_;
+
+
 public:
 
     trajectory_mono();
@@ -38,11 +47,7 @@ public:
     void init();
     void calculus( Mat &final_image);
 
-
-    bool first_execution_;
-    Mat final_image_;
-    Mat prev_image_;
-
+    double translation_;
 
 
 };
