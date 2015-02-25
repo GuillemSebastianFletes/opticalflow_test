@@ -48,6 +48,7 @@ void trajectory_mono::calculus(Mat &final_image)
     std::vector<double> translation;
     std::vector<double> repeated_value;
     std::vector<int> number_repetitons;
+    double media;
 
     double max_value = 0;
     bool elemento_no_presente;
@@ -84,11 +85,13 @@ void trajectory_mono::calculus(Mat &final_image)
         new_translation = final_image_(Rect(0,2*final_image_.rows/3,final_image_.cols, final_image_.rows/3));
         old_translation = prev_image_(Rect(0,2*final_image_.rows/3,final_image_.cols, final_image_.rows/3));
 
-       //cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
+        ///ROI check
+
+        /*cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
         cv::namedWindow( "old_ROI", CV_WINDOW_AUTOSIZE );
-        //imshow("ROI",new_translation);
+        imshow("ROI",new_translation);
         imshow("old_ROI", old_translation);
- /*       //cvWaitKey(50);
+        cvWaitKey(50);*/
 
         //first the features detection
         goodFeaturesToTrack( old_translation, OldFeatures, maxCorners, qualityLevel, minDistance, Mat(),
@@ -98,8 +101,8 @@ void trajectory_mono::calculus(Mat &final_image)
                              blockSize, useHarrisDetector, k );
 
 
-       /* ///Good features to track check
-        cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
+        ///Good features to track check
+        /*   cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
         cout<<"** Number of corners detected: "<<OldFeatures.size()<<endl;
 
          ///See what the features vectors have
@@ -111,7 +114,7 @@ void trajectory_mono::calculus(Mat &final_image)
             cvWaitKey(5);
         }*/
 
-  /*      cv::calcOpticalFlowPyrLK(
+        cv::calcOpticalFlowPyrLK(
                     old_translation, new_translation, // 2 consecutive images
                     OldFeatures, // input point positions in first im
                     NewFeatures, // output point positions in the 2nd
@@ -143,47 +146,35 @@ void trajectory_mono::calculus(Mat &final_image)
 
         cv::namedWindow( "optical_flow", CV_WINDOW_AUTOSIZE );
         cv::imshow( "optical_flow", rgb );
-        //cv::imshow("actual", final_image_);
-        //cv::imshow("anterior", prev_image_);
-        //waitKey(5);
+        waitKey(5);
 
 
-       ///Checking outlaiers
- /*       for( size_t i=0; i < status.size(); i++ )
+        ///Checking outlaiers
+        /*It is know that the optical flow should not be larger than 1/5 * rows of the image*/
+        for( size_t i=0; i < status.size(); i++ )
         {
             if(status[i]) //if there is optical flow get the vector of the desplazament
             {
                 x=(NewFeatures[i].x)-(OldFeatures[i].x);
                 y=(NewFeatures[i].y)-(OldFeatures[i].y);
                 angle_translation = (atan2 (y,x) * 180.0 / PI)*(-1);//angle calculation in degrees
+                /* cout<<angle_translation<<endl;
+                cvWaitKey(300);*/
 
                 /*Cheking if the angle belongs to the comfort area*/
 
- /*               if( angle_translation > 50 && angle_translation < 130 )
+                if(sqrt((x*x)+(y*y)) < final_image.rows/5)
                 {
                     translation.push_back(sqrt((x*x)+(y*y)));
-                }
-
-                else if (angle_translation > 230 && angle_translation < 310 )
-                {
-                    translation.push_back(sqrt((x*x)+(y*y)));
-
-                }
-
-                else
-                {
-                    return;
-
                 }
             }
         }
-
 
         //Calcule the times that the same value apears
         repeated_value.push_back(translation[0]);
         number_repetitons.push_back(0);
 
- /*      for ( size_t i=0; i<translation.size(); i++)
+        for ( size_t i=0; i<translation.size(); i++)
         {
             elemento_no_presente = true;
             for (size_t a=0; a<repeated_value.size();a++)
@@ -191,8 +182,8 @@ void trajectory_mono::calculus(Mat &final_image)
                 if (translation[i] == repeated_value[a])
                 {
                     number_repetitons[a]++;
-                    break;
                     elemento_no_presente = false;
+                    break;
 
                 }
             }
@@ -201,28 +192,47 @@ void trajectory_mono::calculus(Mat &final_image)
             {
                 repeated_value.push_back(translation[i]);
                 number_repetitons.push_back(0);
-                cout<<"hola"<<endl;
             }
         }
+
+
+
+
 
 
         /*Get value that apears more
          *  max_value contains the position where the value with the
          * maximum number of repetitions apears*/
-/*      for (size_t i= 0; i<number_repetitons.size(); i++ )
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
         {
-            if (number_repetitons[i] >= number_repetitons[max_value])
+            if (number_repetitons[i] =  number_repetitons[max_value])
             {
                 max_value = i;
+                //cout<<max_value<<endl;
             }
         }
 
-        translation_=repeated_value[max_value];
-        cout<<translation_;*/
+        translation_ = 0;
+        media = 0;
+
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
+        {
+            if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
+            {
+                translation_ = repeated_value[max_value] + translation_;
+                media++;
+            }
+        }
+
+
+
+        translation_= translation_/media;
+        cout<<translation_<<endl;
+
         prev_image_ = final_image_.clone();
-        imshow("copia",prev_image_);
-        imshow("original", final_image_);
-        cvWaitKey(50);
+        //imshow("copia",prev_image_);
+        //imshow("original", final_image_);
+        // cvWaitKey(50);
 
     }
 
