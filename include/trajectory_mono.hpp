@@ -24,6 +24,7 @@
 
 
 
+
 using namespace cv;
 using namespace std;
 using namespace sensor_msgs;
@@ -34,9 +35,12 @@ class trajectory_mono
 {
     //methods before args.
 private:
+
+    void translation_calculus(Mat &final_image);
     bool first_execution_;
-    Mat final_image_;
+    //Mat final_image_;
     Mat prev_image_;
+
 
 
 public:
@@ -47,7 +51,8 @@ public:
     void init();
     void calculus( Mat &final_image);
 
-    double translation_;
+    std_msgs::Float64 translation_;
+
 
 
 };
