@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <math.h>
 #include <sstream>
@@ -20,11 +21,6 @@
 #include <math.h>
 #include <std_msgs/Float64.h>
 
-
-
-
-
-
 using namespace cv;
 using namespace std;
 using namespace sensor_msgs;
@@ -37,11 +33,12 @@ class trajectory_mono
 private:
 
     void translation_calculus(Mat &final_image);
+    void rotation_calculus(Mat &final_image);
+    void create_excel(double data);
     bool first_execution_;
     //Mat final_image_;
     Mat prev_image_;
-
-
+    ofstream MyExcelFile_;
 
 public:
 
@@ -52,6 +49,7 @@ public:
     void calculus( Mat &final_image);
 
     std_msgs::Float64 translation_;
+    std_msgs::Float64 rotation_;
 
 
 
