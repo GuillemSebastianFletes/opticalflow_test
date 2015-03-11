@@ -13,7 +13,6 @@ trajectory_mono::trajectory_mono()
 {
     //first execution variable
     first_execution_ = true;
-    MyExcelFile_
 }
 
 // Destructor
@@ -22,7 +21,7 @@ trajectory_mono::~trajectory_mono(){}
 // Init
 void trajectory_mono::init(){}
 
-void trajectory_mono::create_excel(double &data, bool it_is_translation )
+/*void trajectory_mono::create_excel(double &data, bool it_is_translation )
 {
     if (it_is_translation)
     {
@@ -44,13 +43,13 @@ void trajectory_mono::create_excel(double &data, bool it_is_translation )
            MyExcelFile.close();
 
 
-}
+}*/
 
 void trajectory_mono::translation_calculus(Mat &final_image)
 {
     //good features to track variables
     vector<Point2f> NewFeatures, OldFeatures;
-    int maxCorners = 500;
+    int maxCorners = 1000;
     double qualityLevel = 0.01;
     double minDistance = 10;
     int blockSize = 3;
@@ -85,22 +84,23 @@ void trajectory_mono::translation_calculus(Mat &final_image)
     new_translation = final_image(Rect(0,2*final_image.rows/3,final_image.cols, final_image.rows/3));//actual frame
     old_translation = prev_image_(Rect(0,2*final_image.rows/3,final_image.cols, final_image.rows/3));//prev frame
 
-    ///ROI check
-    /*cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
+    /** ROI check
+    cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
     cv::namedWindow( "old_ROI", CV_WINDOW_AUTOSIZE );
     imshow("ROI",new_translation);
     imshow("old_ROI", old_translation);
     cvWaitKey(50);*/
 
-    ///Features detection
+    /// Features detection
+
     goodFeaturesToTrack( old_translation, OldFeatures, maxCorners, qualityLevel, minDistance, Mat(),
                          blockSize, useHarrisDetector, k );//prev image
 
     goodFeaturesToTrack( new_translation, NewFeatures, maxCorners, qualityLevel, minDistance, Mat(),
                          blockSize, useHarrisDetector, k );//actual image
 
-    ///Good features to track check
-    /*   cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
+    /** Good features to track check
+      cout<<"** Number of corners detected: "<<NewFeatures.size()<<endl;
     cout<<"** Number of corners detected: "<<OldFeatures.size()<<endl;
 
      ///See what the features vectors have
@@ -113,6 +113,7 @@ void trajectory_mono::translation_calculus(Mat &final_image)
     }*/
 
     ///Optical Flow calculus
+
     cv::calcOpticalFlowPyrLK(
                 old_translation, new_translation, // 2 consecutive images
                 OldFeatures, // input point positions in first im
@@ -121,8 +122,8 @@ void trajectory_mono::translation_calculus(Mat &final_image)
                 err      // tracking error
                 );
 
-    ///checking the optical flow
-  /*  Mat rgb;
+    /** checking the optical flow
+    Mat rgb;
     cvtColor(new_translation, rgb, CV_GRAY2BGR);
     int r = 4;
     RNG rng(12345);
@@ -145,10 +146,9 @@ void trajectory_mono::translation_calculus(Mat &final_image)
 
     cv::namedWindow( "optical_flow", CV_WINDOW_AUTOSIZE );
     cv::imshow( "optical_flow", rgb );
-    waitKey(3);*/
-
-    ///Checking outlaiers
-    /*It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
+    waitKey(3);
+    /** Checking outlaiers
+    *It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
      * This vector is the result of the join of the same point between frames.
      * At the same time we asume that the angulus of this vector might be higher than 30 but less than 300*/
 
@@ -165,78 +165,84 @@ void trajectory_mono::translation_calculus(Mat &final_image)
             if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_translation > 30 && angle_translation < 150)
             {
                 translation.push_back(sqrt((x*x)+(y*y)));
-                /** data is a vector that contains the module and the argument of the vectors
-                 * data is going to be use to make a study of the outliers elimination and understanding the information
-                 * that the optical flow is given to us**/
-                double data[2];
-                data[0] = sqrt((x*x)+(y*y));
-                data[1] = (atan2 (y,x) * 180.0 / PI)*(-1);
+
             }
         }
     }
 
-    trajectory_mono::create_excel(data, it_is_translation);
+    //trajectory_mono::create_excel(data, it_is_translation);
 
-    ///Calcule the times that the same value apears
-    /*First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
+    /** Calcule the times that the same value apears
+    *First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
      * so, the first value of the vector is going to be the first value of the vector that contains the translation values.
      * and number of repetitions of the first value is set to 0
      */
-    repeated_value.push_back(translation[0]);
-    number_repetitons.push_back(0);
 
-    for ( size_t i=0; i<translation.size(); i++)
+    if (translation.size()>0)
     {
-        elemento_no_presente = true;
-        for (size_t a=0; a<repeated_value.size();a++)
-        {
-            if (translation[i] == repeated_value[a])
-            {
-                number_repetitons[a]++;
-                elemento_no_presente = false;
-                break;
 
+        repeated_value.push_back(translation[0]);
+        number_repetitons.push_back(0);
+
+        for ( size_t i=0; i<translation.size(); i++)
+        {
+            elemento_no_presente = true;
+            for (size_t a=0; a<repeated_value.size();a++)
+            {
+                if (translation[i] == repeated_value[a])
+                {
+                    number_repetitons[a]++;
+                    elemento_no_presente = false;
+                    break;
+
+                }
+            }
+
+            if (elemento_no_presente)
+            {
+                repeated_value.push_back(translation[i]);
+                number_repetitons.push_back(1);
             }
         }
 
-        if (elemento_no_presente)
-        {
-            repeated_value.push_back(translation[i]);
-            number_repetitons.push_back(0);
-        }
-    }
 
-    ///Get value that apears more
+
+        /** Get value that apears more
     /*  max_value contains the position where the value with the
-     * maximum number of repetitions apears*/
-    for (size_t i= 0; i<number_repetitons.size(); i++ )
-    {
-        if (number_repetitons[i] =  number_repetitons[max_value])
+     * maximum number of repetitions apears**/
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
         {
-            max_value = i;
+            if (number_repetitons[i] =  number_repetitons[max_value])
+            {
+                max_value = i;
+            }
+        }
+
+        translation_.data = 0;
+        media = 0;
+
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
+        {
+            if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
+            {
+                translation_.data = repeated_value[max_value] + translation_.data;
+                media++;
+            }
         }
     }
 
-    translation_.data = 0;
-    media = 0;
-
-    for (size_t i= 0; i<number_repetitons.size(); i++ )
+    if (media != 0 && translation_.data >= 0)
     {
-        if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
-        {
-            translation_.data = repeated_value[max_value] + translation_.data;
-            media++;
-        }
+        translation_.data = translation_.data / media;
+        cout<<translation_<<endl;
     }
-
-    translation_.data = translation_.data / media;
-    cout<<translation_<<endl;
     prev_image_ = final_image.clone();
-   /*//imshow("copia",prev_image_);
+
+    //imshow("copia",prev_image_);
     //imshow("original", final_image_);
     //cvWaitKey(50);*/
 }
-
+/*
 void trajectory_mono::rotation_calculus(Mat &final_image)
 {
     vector<Point2f> NewFeatures, OldFeatures;
@@ -279,7 +285,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     imshow("old_ROI", old_translation);
     cvWaitKey(5);*/
 
-    ///Features detection
+/*///Features detection
     goodFeaturesToTrack( old_rotation, OldFeatures, maxCorners, qualityLevel, minDistance, Mat(),
                          blockSize, useHarrisDetector, k );//prev image
 
@@ -298,7 +304,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
         cout<<OldFeatures[i]<<endl;
         cvWaitKey(5);
     }*/
-
+/*
     ///Optical Flow calculus
     cv::calcOpticalFlowPyrLK(
                 old_rotation, new_rotation, // 2 consecutive images
@@ -334,11 +340,11 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     cv::imshow( "optical_flow", rgb );
     waitKey(5);*/
 
-    ///Checking outlaiers
-    /*It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
+///Checking outlaiers
+/*It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
      * This vector is the result of the join of the same point between frames.
      * At the same time we asume that the angulus of this vector might be higher than 30 but less than 300*/
-
+/*
     for( size_t i=0; i < status.size(); i++ )
     {
         if(status[i]) //if there is optical flow get the vector of the desplazament
@@ -348,7 +354,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
             angle_rotation = (atan2 (y,x) * 180.0 / PI)*(-1);//angle calculation in degrees
 
             /*Cheking if the angle belongs to the comfort area*/
-            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_rotation > 50 && angle_rotation < 310)
+/*            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_rotation > 50 && angle_rotation < 310)
             {
                 rotation.push_back((atan2 (y,x) * 180.0 / PI)*(-2));
             }
@@ -362,12 +368,12 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
         cout<<rotation[i]<<endl;
     }*/
 
-    ///Calcule the times that the same value apears
-    /*First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
+///Calcule the times that the same value apears
+/*First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
      * so, the first value of the vector is going to be the first value of the vector that contains the translation values.
      * and number of repetitions of the first value is set to 0
      */
-   repeated_value.push_back(rotation[0]);
+/*   repeated_value.push_back(rotation[0]);
     number_repetitons.push_back(0);
 
     for ( size_t i=0; i<rotation.size(); i++)
@@ -394,7 +400,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     ///Get value that apears more
     /*  max_value contains the position where the value with the
      * maximum number of repetitions apears*/
-   for (size_t i= 0; i<number_repetitons.size(); i++ )
+/*   for (size_t i= 0; i<number_repetitons.size(); i++ )
     {
         if (number_repetitons[i] =  number_repetitons[max_value])
         {
@@ -421,9 +427,9 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
    cout<<rotation_.data<<endl;
    // prev_image_ = final_image.clone();
    /*///imshow("copia",prev_image_);
-    //imshow("original", final_image_);
-    //cvWaitKey(50);*/
-}
+//imshow("original", final_image_);
+//cvWaitKey(50);*/
+//}
 
 
 
@@ -452,13 +458,13 @@ void trajectory_mono::calculus(Mat &final_image)
 
     else
     {
-       /* cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
+        /* cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
         cv::imshow("final_image",final_image);
         waitKey(3);*/
-       trajectory_mono::translation_calculus(final_image);
-       //trajectory_mono::rotation_calculus(final_image);
-       //translation_pub.publish(translation_);
-      // rotation_pub.publish(rotation_);
+        trajectory_mono::translation_calculus(final_image);
+        //trajectory_mono::rotation_calculus(final_image);
+        //translation_pub.publish(translation_);
+        // rotation_pub.publish(rotation_);
 
     }
 

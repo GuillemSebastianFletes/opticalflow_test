@@ -34,11 +34,11 @@ private:
 
     void translation_calculus(Mat &final_image);
     void rotation_calculus(Mat &final_image);
-    void create_excel(double data);
+    //void create_excel(double data);
     bool first_execution_;
     //Mat final_image_;
     Mat prev_image_;
-    ofstream MyExcelFile_;
+    //ofstream MyExcelFile_;
 
 public:
 
