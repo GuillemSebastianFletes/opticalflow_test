@@ -32,13 +32,12 @@ class trajectory_mono
     //methods before args.
 private:
 
-    void translation_calculus(Mat &final_image);
-    void rotation_calculus(Mat &final_image);
-    //void create_excel(double data);
+    void translation_calculus(Mat &final_image, ros::NodeHandle &n);
+    void rotation_calculus(Mat &final_image, ros::NodeHandle &n);
     bool first_execution_;
     //Mat final_image_;
     Mat prev_image_;
-    //ofstream MyExcelFile_;
+    FILE * pFile;
 
 public:
 

@@ -21,31 +21,7 @@ trajectory_mono::~trajectory_mono(){}
 // Init
 void trajectory_mono::init(){}
 
-/*void trajectory_mono::create_excel(double &data, bool it_is_translation )
-{
-    if (it_is_translation)
-    {
-     MyExcelFile_.open("/home/guillem/catkin_ws/src/opticalflow_test/tanslation.csv");
-     MyExcelFile_ << "translacion" << endl;
-     MyExcelFile_<<"Modulo"<<
-    }
-
-    else
-    {
-        MyExcelFile_.open("/home/guillem/catkin_ws/src/opticalflow_test/rotacion.csv");
-        MyExcelFile_ << "rotacion" << endl;
-    }
-
-
-
-
-
-           MyExcelFile.close();
-
-
-}*/
-
-void trajectory_mono::translation_calculus(Mat &final_image)
+void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
 {
     //good features to track variables
     vector<Point2f> NewFeatures, OldFeatures;
@@ -77,7 +53,13 @@ void trajectory_mono::translation_calculus(Mat &final_image)
     double x;
     double y;
 
-    bool it_is_translation = true;
+    //Publisher initialation
+    ros::Publisher translation_pub = n.advertise<std_msgs::Float64>("translation", 1);
+
+    /** Create a excel with the data*/
+
+   // pFile=fopen( "translation.csv", "w" );
+
 
     ///ROI calculus
 
@@ -122,8 +104,8 @@ void trajectory_mono::translation_calculus(Mat &final_image)
                 err      // tracking error
                 );
 
-    /** checking the optical flow
-    Mat rgb;
+    /** checking the optical flow**/
+ /*   Mat rgb;
     cvtColor(new_translation, rgb, CV_GRAY2BGR);
     int r = 4;
     RNG rng(12345);
@@ -146,7 +128,8 @@ void trajectory_mono::translation_calculus(Mat &final_image)
 
     cv::namedWindow( "optical_flow", CV_WINDOW_AUTOSIZE );
     cv::imshow( "optical_flow", rgb );
-    waitKey(3);
+    waitKey(1);*/
+
     /** Checking outlaiers
     *It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
      * This vector is the result of the join of the same point between frames.
@@ -162,15 +145,21 @@ void trajectory_mono::translation_calculus(Mat &final_image)
 
 
             /*Cheking if the angle belongs to the comfort area*/
-            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_translation > 30 && angle_translation < 150)
+            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_translation > 30 && angle_translation < 150 && (sqrt((x*x)+(y*y))) >1)
             {
                 translation.push_back(sqrt((x*x)+(y*y)));
 
-            }
+           }
+
         }
     }
+    if (translation.size()==0)
+    {
+        return;
+    }
 
-    //trajectory_mono::create_excel(data, it_is_translation);
+
+
 
     /** Calcule the times that the same value apears
     *First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
@@ -180,7 +169,6 @@ void trajectory_mono::translation_calculus(Mat &final_image)
 
     if (translation.size()>0)
     {
-
         repeated_value.push_back(translation[0]);
         number_repetitons.push_back(0);
 
@@ -206,7 +194,6 @@ void trajectory_mono::translation_calculus(Mat &final_image)
         }
 
 
-
         /** Get value that apears more
     /*  max_value contains the position where the value with the
      * maximum number of repetitions apears**/
@@ -221,32 +208,35 @@ void trajectory_mono::translation_calculus(Mat &final_image)
         translation_.data = 0;
         media = 0;
 
+        /** Creating an execel to analice the distribution
+
+        for( size_t i=0; i < repeated_value.size(); i++ )
+        {
+            fprintf (pFile, "%f;", repeated_value[i]);
+        }
+
+        fprintf (pFile, "\n");
+        fclose (pFile);**/
+
         for (size_t i= 0; i<number_repetitons.size(); i++ )
         {
             if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
             {
-                translation_.data = repeated_value[max_value] + translation_.data;
+                translation_.data = repeated_value[i] + translation_.data;
+
                 media++;
             }
         }
     }
 
-    if (media != 0 && translation_.data >= 0)
-    {
-        translation_.data = translation_.data / media;
-        cout<<translation_<<endl;
-    }
-    prev_image_ = final_image.clone();
+    translation_.data = translation_.data / media;
+    translation_pub.publish(translation_);
+ }
 
-    //imshow("copia",prev_image_);
-    //imshow("original", final_image_);
-    //cvWaitKey(50);*/
-}
-/*
-void trajectory_mono::rotation_calculus(Mat &final_image)
+void trajectory_mono::rotation_calculus(Mat &final_image, ros::NodeHandle &n)
 {
     vector<Point2f> NewFeatures, OldFeatures;
-    int maxCorners = 500;
+    int maxCorners = 1000;
     double qualityLevel = 0.01;
     double minDistance = 10;
     int blockSize = 3;
@@ -273,19 +263,22 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     double x;
     double y;
 
+    //publisher initalation
+    ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("roation", 1);
+
     ///ROI calculus
 
     new_rotation = final_image(Rect(0,0,final_image.cols, final_image.rows/3));//actual frame
     old_rotation = prev_image_(Rect(0,0,final_image.cols, final_image.rows/3));//prev frame
 
-   /* ///ROI check
+    /* ///ROI check
     cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
     cv::namedWindow( "old_ROI", CV_WINDOW_AUTOSIZE );
     imshow("ROI",new_translation);
     imshow("old_ROI", old_translation);
     cvWaitKey(5);*/
 
-/*///Features detection
+    ///Features detection
     goodFeaturesToTrack( old_rotation, OldFeatures, maxCorners, qualityLevel, minDistance, Mat(),
                          blockSize, useHarrisDetector, k );//prev image
 
@@ -304,7 +297,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
         cout<<OldFeatures[i]<<endl;
         cvWaitKey(5);
     }*/
-/*
+
     ///Optical Flow calculus
     cv::calcOpticalFlowPyrLK(
                 old_rotation, new_rotation, // 2 consecutive images
@@ -314,37 +307,36 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
                 err      // tracking error
                 );
 
-/*    ///checking the optical flow
-    Mat rgb;
-    cvtColor(new_translation, rgb, CV_GRAY2BGR);
+    ///checking the optical flow
+    /**Mat rgb2;
+    cvtColor(new_rotation, rgb2, CV_GRAY2BGR);
     int r = 4;
     RNG rng(12345);
     for( int i = 0; i < NewFeatures.size(); i++ )
     {
-        cv::circle( rgb, NewFeatures[i], r, Scalar(255,0,0));
+        cv::circle( rgb2, NewFeatures[i], r, Scalar(255,0,0));
     }
     for( int i = 0; i < OldFeatures.size(); i++ )
     {
-        cv::circle( rgb, OldFeatures[i], r, Scalar(0,0,255));
+        cv::circle( rgb2, OldFeatures[i], r, Scalar(0,0,255));
     }
     for(size_t i=0; i<NewFeatures.size(); i++)
     {
         if(status[i])
         {
-            cv::line(rgb, OldFeatures[i],NewFeatures[i],Scalar(0,255,0));
+            cv::line(rgb2, OldFeatures[i],NewFeatures[i],Scalar(0,255,0));
         }
     }
 
-
     cv::namedWindow( "optical_flow_rotation", CV_WINDOW_AUTOSIZE );
-    cv::imshow( "optical_flow", rgb );
-    waitKey(5);*/
+    cv::imshow( "optical_flow", rgb2 );
+    waitKey(1);*/
 
-///Checking outlaiers
-/*It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
+    ///Checking outlaiers
+    /*It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
      * This vector is the result of the join of the same point between frames.
      * At the same time we asume that the angulus of this vector might be higher than 30 but less than 300*/
-/*
+
     for( size_t i=0; i < status.size(); i++ )
     {
         if(status[i]) //if there is optical flow get the vector of the desplazament
@@ -354,26 +346,31 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
             angle_rotation = (atan2 (y,x) * 180.0 / PI)*(-1);//angle calculation in degrees
 
             /*Cheking if the angle belongs to the comfort area*/
-/*            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_rotation > 50 && angle_rotation < 310)
+            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_rotation > 30 && angle_rotation < 340)
             {
-                rotation.push_back((atan2 (y,x) * 180.0 / PI)*(-2));
+                rotation.push_back((atan2 (y,x) * 180.0 / PI)*(-1));
             }
+
         }
+    }
+    if (rotation.size()==0)
+    {
+        return;
     }
 
     ///Checking rotation vector
-  /*  for (size_t i=0; i<rotation.size();i++)
+    /*  for (size_t i=0; i<rotation.size();i++)
     {
         cout<<"rotation: ";
         cout<<rotation[i]<<endl;
     }*/
 
-///Calcule the times that the same value apears
-/*First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
+    ///Calcule the times that the same value apears
+    /*First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
      * so, the first value of the vector is going to be the first value of the vector that contains the translation values.
      * and number of repetitions of the first value is set to 0
      */
-/*   repeated_value.push_back(rotation[0]);
+    repeated_value.push_back(rotation[0]);
     number_repetitons.push_back(0);
 
     for ( size_t i=0; i<rotation.size(); i++)
@@ -400,15 +397,13 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     ///Get value that apears more
     /*  max_value contains the position where the value with the
      * maximum number of repetitions apears*/
-/*   for (size_t i= 0; i<number_repetitons.size(); i++ )
+    for (size_t i= 0; i<number_repetitons.size(); i++ )
     {
         if (number_repetitons[i] =  number_repetitons[max_value])
         {
             max_value = i;
         }
     }
-   cout<<"max value: ";
-   cout<<repeated_value[max_value]<<endl;
 
     rotation_.data = 0;
     media = 0;
@@ -417,19 +412,17 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     {
         if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
         {
-           rotation_.data = repeated_value[max_value] + rotation_.data;
+            rotation_.data = repeated_value[i] + rotation_.data;
             media++;
         }
     }
 
-   rotation_.data = translation_.data / media;
-   cout<<"final value: ";
-   cout<<rotation_.data<<endl;
-   // prev_image_ = final_image.clone();
-   /*///imshow("copia",prev_image_);
-//imshow("original", final_image_);
-//cvWaitKey(50);*/
-//}
+    rotation_.data = rotation_.data / media;
+    rotation_pub.publish(rotation_);
+
+//    cout<<"rotation: ";
+//    cout<<rotation_.data<<endl;
+}
 
 
 
@@ -439,8 +432,9 @@ void trajectory_mono::calculus(Mat &final_image)
 
     //Publisher initialitation
     ros::NodeHandle n;
-    ros::Publisher translation_pub = n.advertise<std_msgs::Float64>("translation", 1);
+
     ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("roation", 1);
+
 
     ///optical flow calculous
     /*condition to see if is the first atemp, because to calculate the optical flow
@@ -461,13 +455,13 @@ void trajectory_mono::calculus(Mat &final_image)
         /* cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
         cv::imshow("final_image",final_image);
         waitKey(3);*/
-        trajectory_mono::translation_calculus(final_image);
-        //trajectory_mono::rotation_calculus(final_image);
-        //translation_pub.publish(translation_);
-        // rotation_pub.publish(rotation_);
+        trajectory_mono::translation_calculus(final_image, n);
+        trajectory_mono::rotation_calculus(final_image, n);
 
-    }
-
+        prev_image_ = final_image.clone();
+         //imshow("original", final_image);
+        //waitKey(5);
+      }
 }
 
 

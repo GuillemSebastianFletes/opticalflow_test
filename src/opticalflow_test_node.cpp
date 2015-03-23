@@ -75,6 +75,7 @@ int main(int argc, char** argv)
     ros::NodeHandle nh;
     nh.getParam("/original_image_name",original_image_name_);
     nh.getParam("/image_mask_name",image_mask_name_);
+    //ros::Rate loop_rate(10);
     //cout<<original_image_name_.data()<<endl;
     //cout<<image_mask_name_.data()<<endl;
 
@@ -84,6 +85,7 @@ int main(int argc, char** argv)
     message_filters::Subscriber<Image> mask_sub(nh, image_mask_name_.c_str(), 10);
     TimeSynchronizer<Image, Image> sync(original_sub, mask_sub, 10);
     sync.registerCallback(boost::bind(&callback, _1, _2));
+   // loop_rate.sleep();
     ros::spin();
     return 0;
 }
