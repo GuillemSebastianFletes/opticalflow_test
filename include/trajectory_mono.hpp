@@ -32,8 +32,8 @@ class trajectory_mono
     //methods before args.
 private:
 
-    void translation_calculus(Mat &final_image, ros::NodeHandle &n);
-    void rotation_calculus(Mat &final_image, ros::NodeHandle &n);
+    void translation_calculus(Mat &final_image);
+    void rotation_calculus(Mat &final_image);
     bool first_execution_;
     //Mat final_image_;
     Mat prev_image_;

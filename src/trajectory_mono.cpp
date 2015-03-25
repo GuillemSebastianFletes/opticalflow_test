@@ -21,7 +21,7 @@ trajectory_mono::~trajectory_mono(){}
 // Init
 void trajectory_mono::init(){}
 
-void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
+void trajectory_mono::translation_calculus(Mat &final_image)
 {
     //good features to track variables
     vector<Point2f> NewFeatures, OldFeatures;
@@ -53,12 +53,10 @@ void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
     double x;
     double y;
 
-    //Publisher initialation
-    ros::Publisher translation_pub = n.advertise<std_msgs::Float64>("translation", 1);
 
     /** Create a excel with the data*/
 
-   // pFile=fopen( "translation.csv", "w" );
+    // pFile=fopen( "translation.csv", "w" );
 
 
     ///ROI calculus
@@ -105,7 +103,7 @@ void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
                 );
 
     /** checking the optical flow**/
- /*   Mat rgb;
+    /*   Mat rgb;
     cvtColor(new_translation, rgb, CV_GRAY2BGR);
     int r = 4;
     RNG rng(12345);
@@ -149,7 +147,7 @@ void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
             {
                 translation.push_back(sqrt((x*x)+(y*y)));
 
-           }
+            }
 
         }
     }
@@ -230,10 +228,10 @@ void trajectory_mono::translation_calculus(Mat &final_image, ros::NodeHandle &n)
     }
 
     translation_.data = translation_.data / media;
-    translation_pub.publish(translation_);
- }
 
-void trajectory_mono::rotation_calculus(Mat &final_image, ros::NodeHandle &n)
+}
+
+void trajectory_mono::rotation_calculus(Mat &final_image)
 {
     vector<Point2f> NewFeatures, OldFeatures;
     int maxCorners = 1000;
@@ -263,8 +261,6 @@ void trajectory_mono::rotation_calculus(Mat &final_image, ros::NodeHandle &n)
     double x;
     double y;
 
-    //publisher initalation
-    ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("roation", 1);
 
     ///ROI calculus
 
@@ -418,10 +414,18 @@ void trajectory_mono::rotation_calculus(Mat &final_image, ros::NodeHandle &n)
     }
 
     rotation_.data = rotation_.data / media;
-    rotation_pub.publish(rotation_);
+    if (rotation_.data > 90)
+    {
+        rotation_.data = 90 - rotation_.data;
+    }
 
-//    cout<<"rotation: ";
-//    cout<<rotation_.data<<endl;
+    else
+    {
+        rotation_.data = 90 - rotation_.data;
+    }
+
+    //    cout<<"rotation: ";
+    //    cout<<rotation_.data<<endl;
 }
 
 
@@ -432,8 +436,8 @@ void trajectory_mono::calculus(Mat &final_image)
 
     //Publisher initialitation
     ros::NodeHandle n;
-
-    ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("roation", 1);
+    ros::Publisher translation_pub = n.advertise<std_msgs::Float64>("translation", 1);
+    ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("rotation", 1);
 
 
     ///optical flow calculous
@@ -455,13 +459,16 @@ void trajectory_mono::calculus(Mat &final_image)
         /* cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
         cv::imshow("final_image",final_image);
         waitKey(3);*/
-        trajectory_mono::translation_calculus(final_image, n);
-        trajectory_mono::rotation_calculus(final_image, n);
+        //cout << "hola" <<endl;
+        trajectory_mono::translation_calculus(final_image);
+        translation_pub.publish(translation_);
+        trajectory_mono::rotation_calculus(final_image);
+        rotation_pub.publish(rotation_);
 
         prev_image_ = final_image.clone();
-         //imshow("original", final_image);
+        //imshow("original", final_image);
         //waitKey(5);
-      }
+    }
 }
 
 
