@@ -33,7 +33,7 @@ class trajectory_mono
 private:
 
     void translation_calculus(Mat &final_image, Mat &mask);
-    void rotation_calculus(Mat &final_image);
+    void rotation_calculus(Mat &final_image, Mat &mask);
     bool first_execution_;
     //Mat final_image_;
     Mat prev_image_;

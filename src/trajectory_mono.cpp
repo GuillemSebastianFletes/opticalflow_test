@@ -107,135 +107,135 @@ void trajectory_mono::translation_calculus(Mat &final_image, Mat &mask)
                 );
 
     /** checking the optical flow**/
-      Mat rgb;
-    cvtColor(new_translation, rgb, CV_GRAY2BGR);
-    int r = 4;
-    RNG rng(12345);
-    for( int i = 0; i < NewFeatures.size(); i++ )
+//      Mat rgb;
+//    cvtColor(new_translation, rgb, CV_GRAY2BGR);
+//    int r = 4;
+//    RNG rng(12345);
+//    for( int i = 0; i < NewFeatures.size(); i++ )
+//    {
+//        cv::circle( rgb, NewFeatures[i], r, Scalar(255,0,0));
+//    }
+//    for( int i = 0; i < OldFeatures.size(); i++ )
+//    {
+//        cv::circle( rgb, OldFeatures[i], r, Scalar(0,0,255));
+//    }
+//    for(size_t i=0; i<NewFeatures.size(); i++)
+//    {
+//        if(status[i])
+//        {
+//            cv::line(rgb, OldFeatures[i],NewFeatures[i],Scalar(0,255,0));
+//        }
+//    }
+
+
+//    cv::namedWindow( "optical_flow", CV_WINDOW_AUTOSIZE );
+//    cv::imshow( "optical_flow", rgb );
+//    waitKey(1);
+
+    /** Checking outlaiers
+    *It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
+     * This vector is the result of the join of the same point between frames.
+     * At the same time we asume that the angulus of this vector might be higher than 30 but less than 300*/
+
+    for( size_t i=0; i < status.size(); i++ )
     {
-        cv::circle( rgb, NewFeatures[i], r, Scalar(255,0,0));
-    }
-    for( int i = 0; i < OldFeatures.size(); i++ )
-    {
-        cv::circle( rgb, OldFeatures[i], r, Scalar(0,0,255));
-    }
-    for(size_t i=0; i<NewFeatures.size(); i++)
-    {
-        if(status[i])
+        if(status[i]) //if there is optical flow get the vector of the desplazament
         {
-            cv::line(rgb, OldFeatures[i],NewFeatures[i],Scalar(0,255,0));
+            x=(NewFeatures[i].x)-(OldFeatures[i].x);
+            y=(NewFeatures[i].y)-(OldFeatures[i].y);
+            angle_translation = (atan2 (y,x) * 180.0 / PI)*(-1);//angle calculation in degrees
+
+
+            /*Cheking if the angle belongs to the comfort area*/
+            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_translation > 30 && angle_translation < 150 && (sqrt((x*x)+(y*y))) >1)
+            {
+                translation.push_back(sqrt((x*x)+(y*y)));
+
+            }
+
+        }
+    }
+    if (translation.size()<=0)
+    {
+        return;
+    }
+
+
+
+
+    /** Calcule the times that the same value apears
+    *First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
+     * so, the first value of the vector is going to be the first value of the vector that contains the translation values.
+     * and number of repetitions of the first value is set to 0
+     */
+
+    if (translation.size()>0)
+    {
+        repeated_value.push_back(translation[0]);
+        number_repetitons.push_back(0);
+
+        for ( size_t i=0; i<translation.size(); i++)
+        {
+            elemento_no_presente = true;
+            for (size_t a=0; a<repeated_value.size();a++)
+            {
+                if (translation[i] == repeated_value[a])
+                {
+                    number_repetitons[a]++;
+                    elemento_no_presente = false;
+                    break;
+
+                }
+            }
+
+            if (elemento_no_presente)
+            {
+                repeated_value.push_back(translation[i]);
+                number_repetitons.push_back(1);
+            }
+        }
+
+
+        /** Get value that apears more
+    /*  max_value contains the position where the value with the
+     * maximum number of repetitions apears**/
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
+        {
+            if (number_repetitons[i] =  number_repetitons[max_value])
+            {
+                max_value = i;
+            }
+        }
+
+        translation_.data = 0;
+        media = 0;
+
+        /** Creating an execel to analice the distribution
+
+        for( size_t i=0; i < repeated_value.size(); i++ )
+        {
+            fprintf (pFile, "%f;", repeated_value[i]);
+        }
+
+        fprintf (pFile, "\n");
+        fclose (pFile);**/
+
+        for (size_t i= 0; i<number_repetitons.size(); i++ )
+        {
+            if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
+            {
+                translation_.data = repeated_value[i] + translation_.data;
+
+                media++;
+            }
         }
     }
 
-
-    cv::namedWindow( "optical_flow", CV_WINDOW_AUTOSIZE );
-    cv::imshow( "optical_flow", rgb );
-    waitKey(1);
-
-//    /** Checking outlaiers
-//    *It is know that the module vectors obtained from the optical flow should not be larger than 1/5 * rows of the image.
-//     * This vector is the result of the join of the same point between frames.
-//     * At the same time we asume that the angulus of this vector might be higher than 30 but less than 300*/
-
-//    for( size_t i=0; i < status.size(); i++ )
-//    {
-//        if(status[i]) //if there is optical flow get the vector of the desplazament
-//        {
-//            x=(NewFeatures[i].x)-(OldFeatures[i].x);
-//            y=(NewFeatures[i].y)-(OldFeatures[i].y);
-//            angle_translation = (atan2 (y,x) * 180.0 / PI)*(-1);//angle calculation in degrees
-
-
-//            /*Cheking if the angle belongs to the comfort area*/
-//            if(sqrt((x*x)+(y*y)) < final_image.rows/8 && angle_translation > 30 && angle_translation < 150 && (sqrt((x*x)+(y*y))) >1)
-//            {
-//                translation.push_back(sqrt((x*x)+(y*y)));
-
-//            }
-
-//        }
-//    }
-//    if (translation.size()==0)
-//    {
-//        return;
-//    }
-
-
-
-
-//    /** Calcule the times that the same value apears
-//    *First of all, repeated_value needs to be initializated to avoid problems with the conditional stamenter of repetion
-//     * so, the first value of the vector is going to be the first value of the vector that contains the translation values.
-//     * and number of repetitions of the first value is set to 0
-//     */
-
-//    if (translation.size()>0)
-//    {
-//        repeated_value.push_back(translation[0]);
-//        number_repetitons.push_back(0);
-
-//        for ( size_t i=0; i<translation.size(); i++)
-//        {
-//            elemento_no_presente = true;
-//            for (size_t a=0; a<repeated_value.size();a++)
-//            {
-//                if (translation[i] == repeated_value[a])
-//                {
-//                    number_repetitons[a]++;
-//                    elemento_no_presente = false;
-//                    break;
-
-//                }
-//            }
-
-//            if (elemento_no_presente)
-//            {
-//                repeated_value.push_back(translation[i]);
-//                number_repetitons.push_back(1);
-//            }
-//        }
-
-
-//        /** Get value that apears more
-//    /*  max_value contains the position where the value with the
-//     * maximum number of repetitions apears**/
-//        for (size_t i= 0; i<number_repetitons.size(); i++ )
-//        {
-//            if (number_repetitons[i] =  number_repetitons[max_value])
-//            {
-//                max_value = i;
-//            }
-//        }
-
-//        translation_.data = 0;
-//        media = 0;
-
-//        /** Creating an execel to analice the distribution
-
-//        for( size_t i=0; i < repeated_value.size(); i++ )
-//        {
-//            fprintf (pFile, "%f;", repeated_value[i]);
-//        }
-
-//        fprintf (pFile, "\n");
-//        fclose (pFile);**/
-
-//        for (size_t i= 0; i<number_repetitons.size(); i++ )
-//        {
-//            if (number_repetitons[i] >=  0.95*number_repetitons[max_value])
-//            {
-//                translation_.data = repeated_value[i] + translation_.data;
-
-//                media++;
-//            }
-//        }
-//    }
-
-//    translation_.data = translation_.data / media;
+    translation_.data = translation_.data / media;
 
 }
 
-void trajectory_mono::rotation_calculus(Mat &final_image)
+void trajectory_mono::rotation_calculus(Mat &final_image, Mat &mask)
 {
     vector<Point2f> NewFeatures, OldFeatures;
     int maxCorners = 1000;
@@ -250,9 +250,11 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     std::vector<float> err;
 
 
-    //translation variables
+    //Rotation variables
     Mat new_rotation;
     Mat old_rotation;
+    Mat new_mask;
+    Mat old_mask;
 
 
     double angle_rotation;
@@ -272,7 +274,8 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     new_rotation = final_image(Rect(0,0,final_image.cols, final_image.rows/3));//actual frame
     old_rotation = prev_image_(Rect(0,0,final_image.cols, final_image.rows/3));//prev frame
 
-
+    new_mask = mask(Rect(0,0,final_image.cols, final_image.rows/3));//actual frame
+    old_mask = prev_mask_(Rect(0,0,final_image.cols, final_image.rows/3));//actual frame
 
     /* ///ROI check
     cv::namedWindow( "ROI", CV_WINDOW_AUTOSIZE );
@@ -282,10 +285,9 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
     cvWaitKey(5);*/
 
     ///Features detection
-    goodFeaturesToTrack( old_rotation, OldFeatures, maxCorners, qualityLevel, minDistance, Mat(),
-                         blockSize, useHarrisDetector, k );//prev image
+    goodFeaturesToTrack( old_rotation, OldFeatures, maxCorners, qualityLevel, minDistance, old_mask, blockSize, useHarrisDetector, k );//prev image
 
-    goodFeaturesToTrack( new_rotation, NewFeatures, maxCorners, qualityLevel, minDistance, Mat(),
+    goodFeaturesToTrack( new_rotation, NewFeatures, maxCorners, qualityLevel, minDistance, new_mask,
                          blockSize, useHarrisDetector, k );//actual image
 
     ///Good features to track check
@@ -356,7 +358,7 @@ void trajectory_mono::rotation_calculus(Mat &final_image)
 
         }
     }
-    if (rotation.size()==0)
+    if (rotation.size()<=0)
     {
         return;
     }
@@ -458,11 +460,11 @@ void trajectory_mono::calculus(Mat &final_image, Mat &mask)
 
     //border detection using Sobel
 
-//    Sobel( final_image, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT ); // Gradient X
-//    Sobel( final_image, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT ); // Gradient Y
-//    convertScaleAbs( grad_x, abs_grad_x );
-//    convertScaleAbs( grad_y, abs_grad_y );
-//    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, final_image );
+    Sobel( final_image, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT ); // Gradient X
+    Sobel( final_image, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT ); // Gradient Y
+    convertScaleAbs( grad_x, abs_grad_x );
+    convertScaleAbs( grad_y, abs_grad_y );
+    addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, final_image );
 
 
 
@@ -490,9 +492,9 @@ void trajectory_mono::calculus(Mat &final_image, Mat &mask)
         //cout << "hola" <<endl;
 
         trajectory_mono::translation_calculus(final_image, mask);
-       /* translation_pub.publish(translation_);
-        trajectory_mono::rotation_calculus(final_image);
-        rotation_pub.publish(rotation_);*/
+        translation_pub.publish(translation_);
+        trajectory_mono::rotation_calculus(final_image, mask);
+        rotation_pub.publish(rotation_);
 
         prev_image_ = final_image.clone();
         prev_mask_ = mask.clone();
