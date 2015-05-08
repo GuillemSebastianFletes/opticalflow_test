@@ -51,17 +51,17 @@ void callback(const ImageConstPtr &original, const ImageConstPtr &mask)
     ///aply the mask to the image
     //to avoid errors with the mask aplication we have to initialize the final image before its use
     Mat final_image(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
-    final_image.zeros(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
-    original_image_.copyTo(final_image, image_mask_);
-    //final_image = original_image_.clone();
+//    final_image.zeros(cv_disp_ptr->image.rows, cv_disp_ptr->image.cols, CV_8UC1);
+//    original_image_.copyTo(final_image, image_mask_);
+    final_image = original_image_.clone();
     //waitKey(10);
 
-/* ///Testing if the Mask works
+ ///Testing if the Mask works
     cv::namedWindow("final_image", CV_WINDOW_AUTOSIZE);
     cv::imshow("final_image",final_image);
-    waitKey(3);*/
+    //waitKey(3);*/
 
-   trajectory_mono_calculus.calculus(final_image);
+   trajectory_mono_calculus.calculus(final_image, image_mask_);
 }
 
 

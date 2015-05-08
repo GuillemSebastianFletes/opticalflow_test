@@ -446,7 +446,7 @@ void trajectory_mono::calculus(Mat &final_image, Mat &mask)
     ros::Publisher translation_pub = n.advertise<std_msgs::Float64>("translation", 1);
     ros::Publisher rotation_pub = n.advertise<std_msgs::Float64>("rotation", 1);
 
-    //Image pre-procesing, to improve the features detector we are gong to heighten the borders
+    //Image pre-procesing, to improve the features detector we are gong to henghten the borders
     int scale = 1;
     int delta = 0;
     int ddepth = CV_16S;
